@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Электронная таблица</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <style>
+    table {
+      border-collapse: collapse;
+    }
+
+    td {
+      border: 1px solid #ccc;
+      padding: 5px;
+    }
+
+    input {
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .btn-container {
+      margin-top: 10px;
+    }
+
+    .btn {
+      padding: 5px 10px;
+      margin-right: 5px;
+    }
+  </style>
+</head>
+<body>
+<h1>Электронная таблица</h1>
+
+<div id="tableContainer"></div>
+
+<div class="btn-container">
+  <button class="btn" id="addRowBtn">Добавить строку</button>
+  <button class="btn" id="addColumnBtn">Добавить столбец</button>
+  <button class="btn" id="removeRowBtn">Удалить строку</button>
+  <button class="btn" id="removeColumnBtn">Удалить столбец</button>
+</div>
+
+<script>
+  $(document).ready(function() {
+    function getTableData() {
+      const data = localStorage.getItem('tableData');
+      return data ? JSON.parse(data) : [[]];
+    }
+
+    function saveTableData(data) {
+      localStorage.setItem('tableData', JSON.stringify(data));
+    }
+
+    function createCell(value) {
+      const cell = $('<td></td>');
+      const input = $('<input type="text">');
+
+      input.val(value);
+
+      cell.append(input);
+      return cell;
+    }
+
+    function createRow(rowData) {
+      const row = $('<tr></tr>');
+
+      rowData.forEach(cellData => {
+        const cell = createCell(cellData);
+        row.append(cell);
+      });
+
+      return row;
+    }
+
+    function renderTable(tableData) {
+      const tableContainer = $('#tableContainer');
+      tableContainer.empty();
+
+      const table = $('<table></table>');
+
+      tableData.forEach(rowData => {
+        const row = createRow(rowData);
+        table.append(row);
+      });
+
+      tableContainer.append(table);
+    }
+
+    function handleCellDoubleClick() {
+      const input = $(this).find('input');
+      input.prop('readonly', false);
+    }
+
+    function updateTableData() {
+      const input = $(this);
+      const newValue = input.val();
+      const rowIndex = input.closest('tr').index();
+      const cellIndex = input.closest('td').index();
+
+      tableData[rowIndex][cellIndex] = newValue;
+      saveTableData(tableData);
+    }
+
+    function addColumn() {
+      tableData.forEach(rowData => {
+        rowData.push('');
+      });
+
+      saveTableData(tableData);
+      renderTable(tableData);
+    }
+
+    function removeColumn() {
+      if (tableData[0].length === 1) {
+        alert('Невозможно удалить последний столбец');
+        return;
+      }
+
+      if (!confirm('Вы действительно хотите удалить столбец?')) {
+        return;
+      }
+
+      tableData.forEach(rowData => {
+        rowData.pop();
+      });
+
+      saveTableData(tableData);
+      renderTable(tableData);
+    }
+
+    function addRow() {
+      const newRow = Array(tableData[0].length).fill('');
+      tableData.push(newRow);
+
+      saveTableData(tableData);
+      renderTable(tableData);
+    }
+
+    function removeRow() {
+      if (tableData.length === 1) {
+        alert('Невозможно удалить последнюю строку');
+        return;
+      }
+
+      if (!confirm('Вы действительно хотите удалить строку?')) {
+        return;
+      }
+
+      tableData.pop();
+
+      saveTableData(tableData);
+      renderTable(tableData);
+    }
+
+    let tableData = getTableData();
+    renderTable(tableData);
+
+    $(document).on('dblclick', 'td', handleCellDoubleClick);
+    $(document).on('input', 'td input', updateTableData);
+    $('#addRowBtn').on('click', addRow);
+    $('#addColumnBtn').on('click', addColumn);
+    $('#removeRowBtn').on('click', removeRow);
+    $('#removeColumnBtn').on('click', removeColumn);
+  });
+</script>
+</body>
+</html>

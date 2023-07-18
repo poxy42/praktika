@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>Данные о товарах</title>
+    <style>
+        #filterForm {
+            margin-bottom: 10px;
+        }
+
+        #productTable {
+            margin-top: 10px;
+        }
+
+        #productTable td, #productTable th {
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+<h1>Данные о товарах</h1>
+
+<form id="filterForm">
+    <label for="priceFromInput">Цена от:</label>
+    <input type="number" id="priceFromInput">
+
+    <label for="priceToInput">Цена до:</label>
+    <input type="number" id="priceToInput">
+
+    <button type="submit">Применить фильтр</button>
+</form>
+
+<table id="productTable">
+    <thead>
+    <tr>
+        <th>Наименование</th>
+        <th>Цена за единицу</th>
+        <th>Количество</th>
+        <th>Сумма</th>
+    </tr>
+    </thead>
+    <tbody id="productTableBody">
+    </tbody>
+</table>
+
+<div id="errorMessage" style="color: red; display: none;"></div>
+
+<script>
+    const filterForm = document.getElementById('filterForm');
+    const priceFromInput = document.getElementById('priceFromInput');
+    const priceToInput = document.getElementById('priceToInput');
+    const productTableBody = document.getElementById('productTableBody');
+    const errorMessage = document.getElementById('errorMessage');
+
+    function getProductsData() {
+        return fetch('http://exercise.develop.maximaster.ru/service/products/')
+            .then(response => response.json())
+            .catch(error => {
+                console.error('Ошибка при получении данных о товарах:', error);
+                throw error;
+            });
+    }
+
+    function renderProductTable(products) {
+        productTableBody.innerHTML = '';
+
+        products.forEach(product => {
+            const row = document.createElement('tr');
+
+            const nameCell = document.createElement('td');
+            nameCell.textContent = product.name;
+            row.appendChild(nameCell);
+
+            const priceCell = document.createElement('td');
+            priceCell.textContent = product.price;
+            row.appendChild(priceCell);
+
+            const quantityCell = document.createElement('td');
+            quantityCell.textContent = product.quantity;
+            row.appendChild(quantityCell);
+
+            const sumCell = document.createElement('td');
+            sumCell.textContent = product.price * product.quantity;
+            row.appendChild(sumCell);
+
+            productTableBody.appendChild(row);
+        });
+    }
+
+    function filterProductsByPrice(products) {
+        const priceFrom = parseInt(priceFromInput.value, 10);
+        const priceTo = parseInt(priceToInput.value, 10);
+
+        if (priceFrom === 0 && priceTo === 0) {
+            return products;
+        }
+
+        return products.filter(product => {
+            const price = product.price;
+            return (priceFrom === 0 || price >= priceFrom) && (priceTo === 0 || price <= priceTo);
+        });
+    }
+
+    function handleFilterFormSubmit(event) {
+        event.preventDefault();
+
+        const priceFrom = parseInt(priceFromInput.value, 10);
+        const priceTo = parseInt(priceToInput.value, 10);
+
+        if (isNaN(priceFrom) || isNaN(priceTo)) {
+            errorMessage.textContent = 'Ошибка ввода: в полях "Цена от" и "Цена до" должны быть указаны числовые значения';
+            errorMessage.style.display = 'block';
+            return;
+        }
+
+        errorMessage.style.display = 'none';
+
+        getProductsData()
+            .then(products => {
+                const filteredProducts = filterProductsByPrice(products);
+
+                if (filteredProducts.length > 0) {
+                    renderProductTable(filteredProducts);
+                } else {
+                    productTableBody.innerHTML = '';
+                    errorMessage.textContent = 'Нет данных, попадающих под условие фильтра';
+                    errorMessage.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                productTableBody.innerHTML = '';
+                errorMessage.textContent = 'Ошибка при получении данных о товарах';
+                errorMessage.style.display = 'block';
+            });
+    }
+
+    filterForm.addEventListener('submit', handleFilterFormSubmit);
+</script>
+</body>
+</html>

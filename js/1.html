@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>Случайный цвет</title>
+</head>
+<body>
+<h1>Случайный цвет</h1>
+
+<label for="widthInput">Ширина:</label>
+<input type="number" id="widthInput" placeholder="Введите ширину">
+
+<label for="heightInput">Высота:</label>
+<input type="number" id="heightInput" placeholder="Введите высоту">
+
+<div id="square" style="width: 100px; height: 100px; background-color: #000;"></div>
+
+<button id="randomColorButton">Случайный цвет</button>
+
+<script>
+    const widthInput = document.getElementById('widthInput');
+    const heightInput = document.getElementById('heightInput');
+    const square = document.getElementById('square');
+    const randomColorButton = document.getElementById('randomColorButton');
+
+    function changeSquareSize() {
+        const width = widthInput.value + 'px';
+        const height = heightInput.value + 'px';
+
+        square.style.width = width;
+        square.style.height = height;
+    }
+
+    function generateRandomColor() {
+        const letters = '0123456789ABCDEF';
+        let color = '#';
+
+        for (let i = 0; i < 6; i++) {
+            color += letters[Math.floor(Math.random() * 16)];
+        }
+
+        return color;
+    }
+
+    function changeSquareColor() {
+        const randomColor = generateRandomColor();
+        square.style.backgroundColor = randomColor;
+    }
+
+    widthInput.addEventListener('input', changeSquareSize);
+
+    heightInput.addEventListener('input', changeSquareSize);
+
+    randomColorButton.addEventListener('click', changeSquareColor);
+</script>
+</body>
+</html>

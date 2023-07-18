@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Расчет стоимости доставки</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+<h1>Расчет стоимости доставки</h1>
+
+<form id="deliveryForm">
+  <div>
+    <label for="citySelect">Город доставки:</label>
+    <select id="citySelect" name="city"></select>
+  </div>
+  <div>
+    <label for="weightInput">Вес груза (кг):</label>
+    <input type="number" id="weightInput" name="weight" required>
+  </div>
+  <button type="submit">Рассчитать</button>
+</form>
+
+<div id="resultContainer"></div>
+
+<script>
+  $(document).ready(function() {
+    function getCityList(callback) {
+      $.ajax({
+        url: 'get_city_list.php',
+        dataType: 'json',
+        success: function(response) {
+          callback(response);
+        },
+        error: function() {
+          callback([]);
+        }
+      });
+    }
+
+    function calculateDeliveryCost(formData) {
+      $.ajax({
+        url: 'calculate_delivery_cost.php',
+        method: 'POST',
+        data: formData,
+        dataType: 'json',
+        success: function(response) {
+          displayResult(response);
+        },
+        error: function() {
+          displayResult({ status: 'error', message: 'Ошибка при отправке запроса' });
+        }
+      });
+    }
+
+    function displayResult(result) {
+      var resultContainer = $('#resultContainer');
+      resultContainer.empty();
+
+      if (result.status === 'OK') {
+        var message = $('<p>').text(result.message);
+        resultContainer.append(message);
+      } else if (result.status === 'error') {
+        var errorMessage = $('<p>').text(result.message);
+        errorMessage.css('color', 'red');
+        resultContainer.append(errorMessage);
+      }
+    }
+
+    getCityList(function(cityList) {
+      var citySelect = $('#citySelect');
+
+      cityList.forEach(function(city) {
+        var option = $('<option>').text(city);
+        citySelect.append(option);
+      });
+    });
+
+    $('#deliveryForm').on('submit', function(event) {
+      event.preventDefault();
+
+      var formData = $(this).serialize();
+      calculateDeliveryCost(formData);
+    });
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Оформление заказа</title>
+  <style>
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+<h1>Оформление заказа</h1>
+
+<label for="fullNameInput">ФИО:</label>
+<input type="text" id="fullNameInput" placeholder="Введите ФИО">
+<div id="fullNameError" class="error"></div>
+
+<label for="phoneInput">Телефон:</label>
+<input type="text" id="phoneInput" placeholder="Введите телефон">
+<div id="phoneError" class="error"></div>
+
+<label for="emailInput">Email:</label>
+<input type="text" id="emailInput" placeholder="Введите email">
+<div id="emailError" class="error"></div>
+
+<div id="map" style="width: 400px; height: 300px;"></div>
+<div id="locationHint"></div>
+
+<label for="commentInput">Комментарий:</label>
+<textarea id="commentInput" placeholder="Введите комментарий"></textarea>
+<div id="commentError" class="error"></div>
+
+<button id="submitBtn">Отправить</button>
+<div id="submitMessage" class="error"></div>
+
+<script src="https://api-maps.yandex.ru/2.1/?apikey=&lang=ru_RU"></script>
+<script>
+  function validateFullName() {
+    const fullNameInput = document.getElementById('fullNameInput');
+    const fullNameError = document.getElementById('fullNameError');
+    const fullName = fullNameInput.value.trim();
+
+    if (fullName === '') {
+      fullNameError.textContent = 'Не заполнено поле ФИО';
+      return false;
+    }
+
+    fullNameError.textContent = '';
+    return true;
+  }
+
+  function validatePhone() {
+    const phoneInput = document.getElementById('phoneInput');
+    const phoneError = document.getElementById('phoneError');
+    const phone = phoneInput.value.trim();
+
+    if (phone === '') {
+      phoneError.textContent = 'Не заполнено поле Телефон';
+      return false;
+    }
+
+    if (!/^\d+$/.test(phone)) {
+      phoneError.textContent = 'Телефон должен содержать только числа';
+      return false;
+    }
+
+    phoneError.textContent = '';
+    return true;
+  }
+
+  function validateEmail() {
+    const emailInput = document.getElementById('emailInput');
+    const emailError = document.getElementById('emailError');
+    const email = emailInput.value.trim();
+
+    if (email === '') {
+      emailError.textContent = 'Не заполнено поле Email';
+      return false;
+    }
+
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      emailError.textContent = 'Email должен содержать символ собаки (@)';
+      return false;
+    }
+
+    emailError.textContent = '';
+    return true;
+  }
+
+  function validateComment() {
+    const commentInput = document.getElementById('commentInput');
+    const commentError = document.getElementById('commentError');
+    const comment = commentInput.value.trim();
+
+    if (comment.length > 500) {
+      commentError.textContent = 'Комментарий должен быть ограничен 500 символами';
+      return false;
+    }
+
+    commentError.textContent = '';
+    return true;
+  }
+
+  function validateForm() {
+    const isValidFullName = validateFullName();
+    const isValidPhone = validatePhone();
+    const isValidEmail = validateEmail();
+    const isValidComment = validateComment();
+
+    return isValidFullName && isValidPhone && isValidEmail && isValidComment;
+  }
+
+  function handleSubmit(event) {
+    event.preventDefault();
+
+    const isValidForm = validateForm();
+    const submitMessage = document.getElementById('submitMessage');
+
+    if (isValidForm) {
+      submitMessage.textContent = 'Заказ оформлен!';
+      submitMessage.style.color = 'green';
+    } else {
+      submitMessage.textContent = 'Проверьте правильность заполнения полей';
+      submitMessage.style.color = 'red';
+    }
+  }
+
+  function handleMapClick(event) {
+    const locationHint = document.getElementById('locationHint');
+
+    const coordinates = event.get('coords');
+    const latitude = coordinates[0].toPrecision(8);
+    const longitude = coordinates[1].toPrecision(8);
+
+    locationHint.textContent = `Координаты: ${latitude}, ${longitude}`;
+  }
+
+  const submitBtn = document.getElementById('submitBtn');
+  submitBtn.addEventListener('click', handleSubmit);
+
+  ymaps.ready(init);
+
+  function init() {
+    const map = new ymaps.Map("map", {
+      center: [55.76, 37.64],
+      zoom: 10
+    });
+
+    map.events.add('click', handleMapClick);
+  }
+</script>
+</body>
+</html>

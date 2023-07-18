@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Загрузка процессора</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<h1>Загрузка процессора</h1>
+
+<canvas id="cpuChart"></canvas>
+
+<p id="requestsInfo"></p>
+<p id="errorPercentageInfo"></p>
+
+<script>
+  const cpuChartElement = document.getElementById('cpuChart');
+  const requestsInfoElement = document.getElementById('requestsInfo');
+  const errorPercentageInfoElement = document.getElementById('errorPercentageInfo');
+
+  const chartConfig = {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [{
+        label: 'Загрузка процессора',
+        data: [],
+        borderColor: 'blue',
+        fill: false
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      animation: false,
+      scales: {
+        x: {
+          display: true,
+          title: {
+            display: true,
+            text: 'Время'
+          }
+        },
+        y: {
+          display: true,
+          title: {
+            display: true,
+            text: 'Загрузка процессора (%)'
+          },
+          min: 0,
+          max: 100
+        }
+      }
+    }
+  };
+
+  const cpuChart = new Chart(cpuChartElement, chartConfig);
+  let requestsCount = 0;
+  let errorCount = 0;
+
+  function getCpuData() {
+    return fetch(`http://exercise.develop.maximaster.ru/service/cpu/`)
+            .then(response => response.json())
+            .catch(error => {
+              console.error('Ошибка при получении данных о загрузке процессора:', error);
+              throw error;
+            });
+  }
+
+  function updateChart(data) {
+    const labels = chartConfig.data.labels;
+    const datasets = chartConfig.data.datasets[0];
+
+    labels.push(new Date().toLocaleTimeString());
+    datasets.data.push(data);
+
+    if (labels.length > 10) {
+      labels.shift();
+      datasets.data.shift();
+    }
+
+    cpuChart.update();
+  }
+
+  function updateInfo() {
+    requestsInfoElement.textContent = `Число запросов: ${requestsCount}`;
+    errorPercentageInfoElement.textContent = `Процент ошибок: ${(errorCount / requestsCount * 100).toFixed(2)}%`;
+  }
+
+  function updateData() {
+    getCpuData()
+            .then(data => {
+              if (data === 0) {
+                errorCount++;
+              } else {
+                updateChart(data);
+              }
+
+              requestsCount++;
+              updateInfo();
+            })
+            .catch(error => {
+              requestsCount++;
+              updateInfo();
+            });
+  }
+
+  setInterval(updateData, 5000);
+</script>
+</body>
+</html>
